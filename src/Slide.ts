@@ -1,3 +1,5 @@
+import TimeOut from './TimeOut';
+
 /**
  * Classe para funcionalidades de um slide do tipo Stories
  * @param {Element} container
@@ -16,6 +18,7 @@ export default class Slide {
   time: number;
   index: number;
   slide: Element;
+  timeOut: TimeOut | null;
   constructor(
     container: Element,
     slides: Element[],
@@ -27,7 +30,8 @@ export default class Slide {
     this.controls = controls; // Controle para usabilidade do slide
     this.time = time; // Tempo na tela que o slide é visível
     this.index = 0; // Index da array do Slide começando pelo primeiro
-    this.slide = this.slides[this.index];
+    this.slide = this.slides[this.index]; // Slide atual de acordo com o index
+    this.timeOut = null; // Propriedade criada para armazenar o ultimo timeOut gerado
     // Iniciar metodos privados
     this.init();
   }
@@ -43,6 +47,8 @@ export default class Slide {
     // Realiza um loop que remove a visibilidade de todos os slides para o usúario
     this.slides.forEach((el) => this.hide(el));
     this.slide.classList.add('active');
+    // Inicia o slide automatico logo após o slide autal ser renderizado
+    this.auto(this.time);
   }
   prev() {
     // Verifica se o slide atual é maior que 0 e subtrai 1, caso não seja retorna o utlimo slide da array
@@ -53,6 +59,12 @@ export default class Slide {
     // Compara o slide atual com o total de elementos que existem no slide, caso não seja retorna ao primeiro slide da array
     const next = this.index + 1 < this.slides.length ? this.index + 1 : 0;
     this.show(next);
+  }
+  auto(timer: number) {
+    // Limpa o historico anterior de agendamento do time out se ouver e previne bugs na funcionalidade
+    this.timeOut?.clear()
+    // Funcao de auto play no proximo slide de acordo com o tempo deferido
+    this.timeOut = new TimeOut(() => this.next(), timer);
   }
   private addControls() {
     // Adiciona os botoes de usabilidade no parametro controls
