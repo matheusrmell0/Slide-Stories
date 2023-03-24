@@ -78,7 +78,10 @@ export default class Slide {
   }
   pause() {
     // Metodo de pause para true para pausar o slide atual com uma callstack de 300 milissegundos
+    // 300 milissegundos de callstack é o ideal para verificar o tempo exato que o usuario esta segurando o click/touch
     this.pausedTimeout = new TimeOut(() => {
+      // Ativa o metodo da classe para fazer a funcionalidade de pausar e retornar o tempo restante do slide
+      this.timeOut?.pause()
       this.paused = true;
     }, 300);
   }
@@ -89,8 +92,8 @@ export default class Slide {
     if (this.paused) {
       // Verifica se o pause esta ativo para desativá-lo
       this.paused = false;
-      // Retorna o fluxo automatico do slide a partir da verificação de pause
-      this.auto(this.time)
+      // Continua o fluxo automatico do slide a partir da verificação de pause retornando o tempo restante do auto slide
+      this.timeOut?.continue()
     }
   }
   private addControls() {
