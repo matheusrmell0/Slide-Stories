@@ -9,9 +9,10 @@ export default class TimeOut {
   id: number;
   handler: TimerHandler;
   constructor(handler: TimerHandler, time: number) {
+    // Funcao de callback armazenada
+    this.handler = handler;
     // Limpa o setTimeout como propriedade
     this.id = setTimeout(handler, time);
-    this.handler = handler;
   }
   clear(){
     // Limpa o ultimo setTimeout da callstack
