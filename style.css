@@ -3,6 +3,15 @@ body {
   font-family: sans-serif;
   margin: 20px;
 }
+/* Classe que desativa temporariamente alguns recursos do navegador para previnir má UI do slide em IOS*/
+body.paused {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  touch-action: manipulation;
+}
 img,
 video {
   display: block;
@@ -14,6 +23,15 @@ h1 {
 }
 /**/
 /* Estilos das classes */
+/**/
+#slide {
+  display: grid;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 20px auto;
+  max-width: 1260px;
+  background: black;
+}
 #slide-elements {
   display: grid;
 }
@@ -27,10 +45,6 @@ h1 {
 #slide-elements > .active {
   opacity: 1;
   visibility: visible;
-}
-/**/
-#slide {
-  display: grid;
 }
 /* Posiciona os elementos de controle do slide agrupados por cima dos elementos do slide*/
 #slide-controls {

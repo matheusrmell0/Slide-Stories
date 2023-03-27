@@ -127,6 +127,8 @@ export default class Slide {
     }
   }
   pause() {
+    // Adiciona e ativa uma classe de CSS para previnir diversas má funcionalidades para UI/UX na utilização do slide
+    document.body.classList.add('paused');
     // Metodo de pause para true para pausar o slide atual com uma callstack de 300 milissegundos
     // 300 milissegundos de callstack é o ideal para verificar o tempo exato que o usuario esta segurando o click/touch
     this.pausedTimeout = new TimeOut(() => {
@@ -142,6 +144,8 @@ export default class Slide {
     }, 300);
   }
   continue() {
+    // Remove e desativa uma classe de CSS para previnir diversas má funcionalidades para UI/UX na utilização do slide e retorna ao padrão retomando a acessibilidade e funcionalidade padrão do navegador
+    document.body.classList.remove('paused');
     // Metodo para limpar a callstack atual da referencia da funcao gerada no metodo pause
     this.pausedTimeout?.clear();
     // Metodo de pause para false para continuar o fluxo de slides
@@ -173,7 +177,9 @@ export default class Slide {
     this.controls.appendChild(nextButton);
     // Eventos de pause e continue adicionado aos controles
     this.controls.addEventListener('pointerdown', () => this.pause());
-    this.controls.addEventListener('pointerup', () => this.continue());
+    // Evento de continue adicionado a qualquer área de pointerup do navegador
+    document.addEventListener('pointerup', () => this.continue());
+    document.addEventListener('touchend', () => this.continue());
   }
   private addThumbItems() {
     // Cria um div contendo uma thumb de estilo animada que mostra o tempo que o slide vai permanecer na tela
