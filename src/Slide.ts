@@ -31,7 +31,9 @@ export default class Slide {
     this.slides = slides; // Array de Slides
     this.controls = controls; // Controle para usabilidade do slide
     this.time = time; // Tempo na tela que o slide é visível
-    this.index = 0; // Index da array do Slide começando pelo primeiro
+    this.index = localStorage.getItem('activeSlide')
+      ? Number(localStorage.getItem('activeSlide'))
+      : 0; // Index da array do Slide começando pelo ultimo slide salvo no localStorage ou 0 se não houver
     this.slide = this.slides[this.index]; // Slide atual de acordo com o index
     this.timeOut = null; // Propriedade criada para armazenar o ultimo timeOut gerado
     this.paused = false; // Propriedade boolean criada para verificar o slide pausado
@@ -42,17 +44,45 @@ export default class Slide {
   hide(el: Element) {
     // Remove a visibilidade do elemento para o usúario
     el.classList.remove('active');
+    // Se o slide atual da safe guard for do tipo HTMLVideoElement o slide do tipo video será pausado e o tempo será reiniciado
+    if (el instanceof HTMLVideoElement) {
+      el.currentTime = 0;
+      el.pause();
+    }
   }
   show(index: number) {
     // Mostra o slide para o usúario a partir do index
     // Salva o slide e seu index atual ativo no momento em uma propriedade
     this.index = index;
     this.slide = this.slides[this.index];
+    // Salva no localStorage o ultimo slide ativo no momento
+    localStorage.setItem('activeSlide', String(this.index));
     // Realiza um loop que remove a visibilidade de todos os slides para o usúario
     this.slides.forEach((el) => this.hide(el));
     this.slide.classList.add('active');
     // Inicia o slide automatico logo após o slide autal ser renderizado
-    this.auto(this.time);
+    // Se o slide atual da safe guard for do tipo HTMLVideoElement o tempo pré progamado do slide automático será o tempo exato da duração do video
+    if (this.slide instanceof HTMLVideoElement) {
+      this.autoVideo(this.slide);
+    } else {
+      this.auto(this.time);
+    }
+  }
+  autoVideo(video: HTMLVideoElement) {
+    // Recebe o parametro video para puxar sua duração e manipular no slide
+    // Silencia o video logo quando renderizado
+    video.muted = true;
+    // Inicia o video logo quando renderizado
+    video.play();
+    // Verifica se o video foi renderizado e esta rodando com sucesso para poder utilizar o valor de duração no metodo
+    let startPlaying = true;
+    video.addEventListener('playing', () => {
+      // Tempo em milissegundos da duração do video para configurar o pause e play
+      if (startPlaying) {
+        this.auto(video.duration * 1000);
+        startPlaying = false;
+      }
+    });
   }
   prev() {
     // Verifica se slide atual esta pausado para renderizar o slide anterior
@@ -79,10 +109,15 @@ export default class Slide {
   pause() {
     // Metodo de pause para true para pausar o slide atual com uma callstack de 300 milissegundos
     // 300 milissegundos de callstack é o ideal para verificar o tempo exato que o usuario esta segurando o click/touch
+
     this.pausedTimeout = new TimeOut(() => {
       // Ativa o metodo da classe para fazer a funcionalidade de pausar e retornar o tempo restante do slide
-      this.timeOut?.pause()
+      this.timeOut?.pause();
       this.paused = true;
+      // Verifica a safe guard slide para o tipo HTMLVideoElement para a funcionalidade de pausar a progressão do slide e também o vídeo
+      if (this.slide instanceof HTMLVideoElement) {
+        this.slide.pause();
+      }
     }, 300);
   }
   continue() {
@@ -93,7 +128,11 @@ export default class Slide {
       // Verifica se o pause esta ativo para desativá-lo
       this.paused = false;
       // Continua o fluxo automatico do slide a partir da verificação de pause retornando o tempo restante do auto slide
-      this.timeOut?.continue()
+      this.timeOut?.continue();
+      // Verifica a safe guard slide para o tipo HTMLVideoElement para a funcionalidade de continuar a progressão do slide e também o vídeo
+      if (this.slide instanceof HTMLVideoElement) {
+        this.slide.play();
+      }
     }
   }
   private addControls() {
