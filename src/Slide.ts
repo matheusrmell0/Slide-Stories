@@ -21,6 +21,8 @@ export default class Slide {
   timeOut: TimeOut | null;
   paused: boolean;
   pausedTimeout: TimeOut | null;
+  thumbItems: HTMLElement[] | null;
+  thumb: HTMLElement | null;
   constructor(
     container: Element,
     slides: Element[],
@@ -38,6 +40,8 @@ export default class Slide {
     this.timeOut = null; // Propriedade criada para armazenar o ultimo timeOut gerado
     this.paused = false; // Propriedade boolean criada para verificar o slide pausado
     this.pausedTimeout = null; // Propriedade criada para armazenar o ultimo timeOut gerado da callstack do pause
+    this.thumbItems = null; // Propriedade criada para armazenar a lista de thumbs geradas
+    this.thumb = null; // Propriedade criada para armazenar o thumb atual da lista
     // Iniciar metodos privados
     this.init();
   }
@@ -60,12 +64,23 @@ export default class Slide {
     // Realiza um loop que remove a visibilidade de todos os slides para o usúario
     this.slides.forEach((el) => this.hide(el));
     this.slide.classList.add('active');
+    //
     // Inicia o slide automatico logo após o slide autal ser renderizado
     // Se o slide atual da safe guard for do tipo HTMLVideoElement o tempo pré progamado do slide automático será o tempo exato da duração do video
     if (this.slide instanceof HTMLVideoElement) {
       this.autoVideo(this.slide);
     } else {
       this.auto(this.time);
+    }
+    //
+    // Verifica existe a array com os thumbs
+    if (this.thumbItems) {
+      // Armazena o exato thumb atual de acordo com o index do slide para controlar sua renderização na tela
+      this.thumb = this.thumbItems[this.index];
+      // Realiza um loop que remove a visibilidade de todos os thumbs para o usúario
+      this.thumbItems.forEach((el) => el.classList.remove('active'));
+      // Após o loop ativa o slide exato baseado no index para aparecer na tela
+      this.thumb.classList.add('active');
     }
   }
   autoVideo(video: HTMLVideoElement) {
@@ -105,11 +120,15 @@ export default class Slide {
     this.timeOut = new TimeOut(() => {
       this.next();
     }, timer);
+    // Verifica se o thumb existe
+    if (this.thumb) {
+      // Modifica via CSS o tempo que a animação do thumb irá durar baseada no mesmo tempo de duração indicado no duração do slide
+      this.thumb.style.animationDuration = `${String(timer)}ms`;
+    }
   }
   pause() {
     // Metodo de pause para true para pausar o slide atual com uma callstack de 300 milissegundos
     // 300 milissegundos de callstack é o ideal para verificar o tempo exato que o usuario esta segurando o click/touch
-
     this.pausedTimeout = new TimeOut(() => {
       // Ativa o metodo da classe para fazer a funcionalidade de pausar e retornar o tempo restante do slide
       this.timeOut?.pause();
@@ -118,6 +137,8 @@ export default class Slide {
       if (this.slide instanceof HTMLVideoElement) {
         this.slide.pause();
       }
+      // Verifica se o thumb existe e muda o estado da animação do thumb para pausar
+      this.thumb?.classList.add('paused');
     }, 300);
   }
   continue() {
@@ -129,6 +150,8 @@ export default class Slide {
       this.paused = false;
       // Continua o fluxo automatico do slide a partir da verificação de pause retornando o tempo restante do auto slide
       this.timeOut?.continue();
+      // Verifica se o thumb existe e muda o estado da animação do thumb novamente para continuar
+      this.thumb?.classList.remove('paused');
       // Verifica a safe guard slide para o tipo HTMLVideoElement para a funcionalidade de continuar a progressão do slide e também o vídeo
       if (this.slide instanceof HTMLVideoElement) {
         this.slide.play();
@@ -152,9 +175,23 @@ export default class Slide {
     this.controls.addEventListener('pointerdown', () => this.pause());
     this.controls.addEventListener('pointerup', () => this.continue());
   }
+  private addThumbItems() {
+    // Cria um div contendo uma thumb de estilo animada que mostra o tempo que o slide vai permanecer na tela
+    const thumbContainer = document.createElement('div');
+    thumbContainer.id = 'slide-thumb';
+    // Realiza um loop para cada slide adicionado colocando um thumb de estilo nele
+    for (let i = 0; i < this.slides.length; i++) {
+      thumbContainer.innerHTML += `<span><span class='thumb-item'></span></span>`;
+    }
+    // Adiciona os thumbs de estilo animado na div de controles
+    this.controls.appendChild(thumbContainer);
+    // Adiciona uma array de thumbs em uma propriedade para referencia e utilização
+    this.thumbItems = Array.from(document.querySelectorAll('.thumb-item'));
+  }
   private init() {
     // Inicia metodos padroes obrigatorios
     this.addControls();
+    this.addThumbItems();
     this.show(this.index);
   }
 }
